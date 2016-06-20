@@ -9,7 +9,7 @@ type Pageable struct {
 
 // NewPageable creates a new Pageable instance for provided page and size
 func NewPageable(page, size int) *Pageable {
-	return NewSortedPageable(page, size, nil)
+	return NewSortedPageable(page, size, EmptySort())
 }
 
 // NewSortedPageable creats a new Pageable instance for provided page, size and Sort object

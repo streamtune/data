@@ -13,7 +13,7 @@ func TestNewPageableWillCreateUnsortedPageable(t *testing.T) {
 	assert.NotNil(pageable)
 	assert.Equal(0, pageable.Page)
 	assert.Equal(10, pageable.Size)
-	assert.Nil(pageable.Sort)
+	assert.Equal(EmptySort(), pageable.Sort)
 }
 
 func TestNewSortedPageableWillCreateSortedPageable(t *testing.T) {
