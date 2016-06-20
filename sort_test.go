@@ -236,3 +236,15 @@ func TestSortAnd(t *testing.T) {
 	assert.Equal("prop5", sort.Orders[4].Property)
 	assert.Equal(Asc, sort.Orders[4].Direction)
 }
+
+func TestSortIsEmptyReturnsTrue(t *testing.T) {
+	sort := EmptySort()
+
+	assert.True(t, sort.IsEmpty())
+}
+
+func TestSortIsEmptyReturnsFalse(t *testing.T) {
+	sort := SortBy(Asc, "prop1")
+
+	assert.False(t, sort.IsEmpty())
+}

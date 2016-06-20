@@ -9,33 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewDefaultParser(t *testing.T) {
-	fixture := NewDefaultHttpPageable()
-
-	assert := assert.New(t)
-	assert.NotNil(fixture)
-	assert.Equal(DefaultPageParam, fixture.pageParam)
-	assert.Equal(DefaultSizeParam, fixture.sizeParam)
-	assert.Equal(DefaultSortParam, fixture.sortParam)
-	assert.Equal(DefaultPage, fixture.defaultPage)
-	assert.Equal(DefaultSize, fixture.defaultSize)
-}
-
-func TestNewParser(t *testing.T) {
-	fixture := NewHttpPageable("p_page", "p_size", "p_sort", 99, 123)
-
-	assert := assert.New(t)
-	assert.NotNil(fixture)
-	assert.Equal("p_page", fixture.pageParam)
-	assert.Equal("p_size", fixture.sizeParam)
-	assert.Equal("p_sort", fixture.sortParam)
-	assert.Equal(99, fixture.defaultPage)
-	assert.Equal(123, fixture.defaultSize)
-}
-
-func TestPageableHttpParseRequest(t *testing.T) {
+func TestParseHTTPRequest(t *testing.T) {
 	req, _ := http.NewRequest("GET", "http://localhost/v1/api/list?page=1&size=25&sort=prop1,asc&sort=prop2,desc", nil)
-	pageable, err := NewDefaultHttpPageable().ParseRequest(req)
+	pageable, err := ParseHTTPRequest(req)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -48,9 +24,30 @@ func TestPageableHttpParseRequest(t *testing.T) {
 	assert.Equal(data.Desc, pageable.Sort.Orders[1].Direction)
 }
 
-func TestPageableHttpParseURLWithParameters(t *testing.T) {
+func TestParseHTTPRequestWithParams(t *testing.T) {
+	req, _ := http.NewRequest("GET", "http://localhost/v1/api/list?p_page=1&p_size=25&p_sort=prop1,asc&p_sort=prop2,desc", nil)
+	pageable, err := ParseHTTPRequestWithParams(req, Params{
+		PageParam:   "p_page",
+		SizeParam:   "p_size",
+		SortParam:   "p_sort",
+		DefaultPage: 1,
+		DefaultSize: 50,
+	})
+
+	assert := assert.New(t)
+	assert.Nil(err)
+	assert.Equal(1, pageable.Page)
+	assert.Equal(25, pageable.Size)
+	assert.Equal(2, len(pageable.Sort.Orders))
+	assert.Equal("prop1", pageable.Sort.Orders[0].Property)
+	assert.Equal(data.Asc, pageable.Sort.Orders[0].Direction)
+	assert.Equal("prop2", pageable.Sort.Orders[1].Property)
+	assert.Equal(data.Desc, pageable.Sort.Orders[1].Direction)
+}
+
+func TestParseURL(t *testing.T) {
 	url, _ := url.Parse("http://localhost/v1/api/list?page=1&size=25&sort=prop1,asc&sort=prop2,desc")
-	pageable, err := NewDefaultHttpPageable().ParseURL(url)
+	pageable, err := ParseURL(url)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -63,9 +60,30 @@ func TestPageableHttpParseURLWithParameters(t *testing.T) {
 	assert.Equal(data.Desc, pageable.Sort.Orders[1].Direction)
 }
 
-func TestPageableHttpParseValuesWithPage(t *testing.T) {
+func TestParseURLWithParams(t *testing.T) {
+	url, _ := url.Parse("http://localhost/v1/api/list?p_page=1&p_size=25&p_sort=prop1,asc&p_sort=prop2,desc")
+	pageable, err := ParseURLWithParams(url, Params{
+		PageParam:   "p_page",
+		SizeParam:   "p_size",
+		SortParam:   "p_sort",
+		DefaultPage: 1,
+		DefaultSize: 50,
+	})
+
+	assert := assert.New(t)
+	assert.Nil(err)
+	assert.Equal(1, pageable.Page)
+	assert.Equal(25, pageable.Size)
+	assert.Equal(2, len(pageable.Sort.Orders))
+	assert.Equal("prop1", pageable.Sort.Orders[0].Property)
+	assert.Equal(data.Asc, pageable.Sort.Orders[0].Direction)
+	assert.Equal("prop2", pageable.Sort.Orders[1].Property)
+	assert.Equal(data.Desc, pageable.Sort.Orders[1].Direction)
+}
+
+func TestParseValues(t *testing.T) {
 	values := map[string][]string{"page": []string{"5"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -75,42 +93,42 @@ func TestPageableHttpParseValuesWithPage(t *testing.T) {
 	assert.Nil(pageable.Sort)
 }
 
-func TestPageableHttpParseValuesWithMultiplePageValues(t *testing.T) {
+func TestParseValuesWithMultiplePageValues(t *testing.T) {
 	values := map[string][]string{"page": []string{"5", "6"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrWrongPageValues, err)
 }
 
-func TestPageableHttpParseValuesWithNonNumericPageValue(t *testing.T) {
+func TestParseValuesWithNonNumericPageValue(t *testing.T) {
 	values := map[string][]string{"page": []string{"abc"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrInvalidPageValue, err)
 }
 
-func TestPageableHttpParseValuesWithInvalidPageValue(t *testing.T) {
+func TestParseValuesWithInvalidPageValue(t *testing.T) {
 	values := map[string][]string{"page": []string{"-1"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrInvalidPageValue, err)
 }
 
-func TestPageableHttpWithNoPageValue(t *testing.T) {
+func TestParseValuesWithNoPageValue(t *testing.T) {
 	values := map[string][]string{}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
 	assert.Equal(DefaultPage, pageable.Page)
 }
 
-func TestPageableHttpParseValuesWithSize(t *testing.T) {
+func TestParseValuesWithSize(t *testing.T) {
 	values := map[string][]string{"size": []string{"25"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -120,25 +138,25 @@ func TestPageableHttpParseValuesWithSize(t *testing.T) {
 	assert.Nil(pageable.Sort)
 }
 
-func TestPageableHttpParseValuesWithMultipleSizeValues(t *testing.T) {
+func TestParseValuesWithMultipleSizeValues(t *testing.T) {
 	values := map[string][]string{"size": []string{"15", "25"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrWrongSizeValues, err)
 }
 
-func TestPageableHttpParseValuesWithNonNumericSizeValue(t *testing.T) {
+func TestParseValuesWithNonNumericSizeValue(t *testing.T) {
 	values := map[string][]string{"size": []string{"abc"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrInvalidSizeValue, err)
 }
 
-func TestPageableHttpParseValuesWithInvalidSizeValue(t *testing.T) {
+func TestParseValuesWithInvalidSizeValue(t *testing.T) {
 	values := map[string][]string{"size": []string{"0"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Equal(ErrInvalidSizeValue, err)
@@ -146,7 +164,7 @@ func TestPageableHttpParseValuesWithInvalidSizeValue(t *testing.T) {
 
 func TestPageableHttpWithNoSizeValue(t *testing.T) {
 	values := map[string][]string{}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -155,7 +173,7 @@ func TestPageableHttpWithNoSizeValue(t *testing.T) {
 
 func TestPageableHttpParserValuesWithSingleSortWithOneProperty(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1,desc"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -167,7 +185,7 @@ func TestPageableHttpParserValuesWithSingleSortWithOneProperty(t *testing.T) {
 
 func TestPageableHttpParserValuesWithSingleSortWithOnePropertyNoDirection(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -179,7 +197,7 @@ func TestPageableHttpParserValuesWithSingleSortWithOnePropertyNoDirection(t *tes
 
 func TestPageableHttpParserValuesWithSingleSortWithTwoProperty(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1,prop2,desc"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -193,7 +211,7 @@ func TestPageableHttpParserValuesWithSingleSortWithTwoProperty(t *testing.T) {
 
 func TestPageableHttpParserValuesWithSingleSortWithTwoPropertyNoDirection(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1,prop2"}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.NotNil(err)
@@ -202,7 +220,7 @@ func TestPageableHttpParserValuesWithSingleSortWithTwoPropertyNoDirection(t *tes
 
 func TestPageableHttpParserValuesWithMultipleSortWithOneProperty(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1,desc", "prop2,asc"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -216,7 +234,7 @@ func TestPageableHttpParserValuesWithMultipleSortWithOneProperty(t *testing.T) {
 
 func TestPageableHttpParserValuesWithMultipleSortWithOnePropertyNoDirection(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1", "prop2"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -230,7 +248,7 @@ func TestPageableHttpParserValuesWithMultipleSortWithOnePropertyNoDirection(t *t
 
 func TestPageableHttpParserValuesWithMultipleSortWithTwoProperty(t *testing.T) {
 	values := map[string][]string{"sort": []string{"prop1,prop2,desc", "prop3,prop4,asc"}}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -248,7 +266,7 @@ func TestPageableHttpParserValuesWithMultipleSortWithTwoProperty(t *testing.T) {
 
 func TestPageableHttpParserValuesWithNoSort(t *testing.T) {
 	values := map[string][]string{}
-	pageable, err := NewDefaultHttpPageable().ParseValues(values)
+	pageable, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -257,7 +275,7 @@ func TestPageableHttpParserValuesWithNoSort(t *testing.T) {
 
 func TestPageableHttpParserValuesWithSortNoValue(t *testing.T) {
 	values := map[string][]string{"sort": []string{""}}
-	_, err := NewDefaultHttpPageable().ParseValues(values)
+	_, err := ParseValues(values)
 
 	assert := assert.New(t)
 	assert.NotNil(err)

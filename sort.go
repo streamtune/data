@@ -17,6 +17,11 @@ type Sort struct {
 	Orders []Order
 }
 
+// EmptySort will create a new empty sort object
+func EmptySort() *Sort {
+	return &Sort{Orders: make([]Order, 0)}
+}
+
 // NewSort create a new Sort object with provided order clauses
 func NewSort(order Order, orders ...Order) *Sort {
 	target := make([]Order, 1, len(orders)+1)
@@ -44,6 +49,11 @@ func SortByProperties(property string, properties ...string) *Sort {
 func (sort *Sort) And(other *Sort) *Sort {
 	target := append(sort.Orders, other.Orders...)
 	return &Sort{Orders: target}
+}
+
+// IsEmpty will check if the sort contains properties
+func (sort *Sort) IsEmpty() bool {
+	return len(sort.Orders) == 0
 }
 
 // Order it's the pairing of a property and a direction.
