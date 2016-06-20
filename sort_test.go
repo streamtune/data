@@ -218,3 +218,21 @@ func TestSortByPropertiesWithMorePropertoes(t *testing.T) {
 	assert.Equal("prop3", sort.Orders[2].Property)
 	assert.Equal(Asc, sort.Orders[2].Direction)
 }
+
+func TestSortAnd(t *testing.T) {
+	sort := SortBy(Desc, "prop1", "prop2").And(SortBy(Asc, "prop3", "prop4", "prop5"))
+
+	assert := assert.New(t)
+	assert.NotNil(sort)
+	assert.Equal(5, len(sort.Orders))
+	assert.Equal("prop1", sort.Orders[0].Property)
+	assert.Equal(Desc, sort.Orders[0].Direction)
+	assert.Equal("prop2", sort.Orders[1].Property)
+	assert.Equal(Desc, sort.Orders[1].Direction)
+	assert.Equal("prop3", sort.Orders[2].Property)
+	assert.Equal(Asc, sort.Orders[2].Direction)
+	assert.Equal("prop4", sort.Orders[3].Property)
+	assert.Equal(Asc, sort.Orders[3].Direction)
+	assert.Equal("prop5", sort.Orders[4].Property)
+	assert.Equal(Asc, sort.Orders[4].Direction)
+}

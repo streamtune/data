@@ -40,6 +40,12 @@ func SortByProperties(property string, properties ...string) *Sort {
 	return SortBy(Asc, property, properties...)
 }
 
+// And will join the provided Sort object with the target one and produces a new Sort instance
+func (sort *Sort) And(other *Sort) *Sort {
+	target := append(sort.Orders, other.Orders...)
+	return &Sort{Orders: target}
+}
+
 // Order it's the pairing of a property and a direction.
 // It's used as input of Sort.
 type Order struct {
