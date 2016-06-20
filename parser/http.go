@@ -34,7 +34,7 @@ var (
 )
 
 // PageableParser is the object instance for page parameter parsing
-type PageableParser struct {
+type HttpPageable struct {
 	pageParam   string
 	sizeParam   string
 	sortParam   string
@@ -43,27 +43,27 @@ type PageableParser struct {
 }
 
 // NewDefaultParser will create a new PageParser with default parameters
-func NewDefaultParser() *PageableParser {
-	return NewParser(DefaultPageParam, DefaultSizeParam, DefaultSortParam, DefaultPage, DefaultSize)
+func NewDefaultHttpPageable() *HttpPageable {
+	return NewHttpPageable(DefaultPageParam, DefaultSizeParam, DefaultSortParam, DefaultPage, DefaultSize)
 }
 
 // NewParser will create a new PageParser with provided parameters
-func NewParser(pageParam, sizeParam, sortParam string, defaultPage, defaultSize int) *PageableParser {
-	return &PageableParser{pageParam, sizeParam, sortParam, defaultPage, defaultSize}
+func NewHttpPageable(pageParam, sizeParam, sortParam string, defaultPage, defaultSize int) *HttpPageable {
+	return &HttpPageable{pageParam, sizeParam, sortParam, defaultPage, defaultSize}
 }
 
 // ParseRequest will parse the HTTP request object
-func (parser *PageableParser) ParseRequest(req *http.Request) (*data.Pageable, error) {
+func (parser *HttpPageable) ParseRequest(req *http.Request) (*data.Pageable, error) {
 	return parser.ParseURL(req.URL)
 }
 
 // ParseURL will parse the query parameters in HTTP URL
-func (parser *PageableParser) ParseURL(url *url.URL) (*data.Pageable, error) {
+func (parser *HttpPageable) ParseURL(url *url.URL) (*data.Pageable, error) {
 	return parser.ParseValues(url.Query())
 }
 
 // ParseValues will parse a map of parameters
-func (parser *PageableParser) ParseValues(params map[string][]string) (*data.Pageable, error) {
+func (parser *HttpPageable) ParseValues(params map[string][]string) (*data.Pageable, error) {
 	page, err := parser.parsePage(params)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (parser *PageableParser) ParseValues(params map[string][]string) (*data.Pag
 	return data.NewSortedPageable(page, size, sort), nil
 }
 
-func (parser *PageableParser) parsePage(params map[string][]string) (int, error) {
+func (parser *HttpPageable) parsePage(params map[string][]string) (int, error) {
 	if value, ok := params[parser.pageParam]; ok {
 		if len(value) != 1 {
 			return parser.defaultPage, ErrWrongPageValues
@@ -93,7 +93,7 @@ func (parser *PageableParser) parsePage(params map[string][]string) (int, error)
 	return parser.defaultPage, nil
 }
 
-func (parser *PageableParser) parseSize(params map[string][]string) (int, error) {
+func (parser *HttpPageable) parseSize(params map[string][]string) (int, error) {
 	if value, ok := params[parser.sizeParam]; ok {
 		if len(value) != 1 {
 			return parser.defaultSize, ErrWrongSizeValues
@@ -107,7 +107,7 @@ func (parser *PageableParser) parseSize(params map[string][]string) (int, error)
 	return parser.defaultSize, nil
 }
 
-func (parser *PageableParser) parseSort(params map[string][]string) (*data.Sort, error) {
+func (parser *HttpPageable) parseSort(params map[string][]string) (*data.Sort, error) {
 	if values, ok := params[parser.sortParam]; ok {
 		var sort *data.Sort
 		for i, v := range values {
@@ -126,7 +126,7 @@ func (parser *PageableParser) parseSort(params map[string][]string) (*data.Sort,
 	return nil, nil
 }
 
-func (parser *PageableParser) parseOrder(sort string) (*data.Sort, error) {
+func (parser *HttpPageable) parseOrder(sort string) (*data.Sort, error) {
 	parts := strings.Split(sort, ",")
 	len := len(parts)
 	if len == 1 {
