@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"github.com/streamtune/data"
+	data "gopkg.in/streamtune/data"
 	"gopkg.in/mgo.v2"
 )
 
