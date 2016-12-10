@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/streamtune/data"
+	data "gopkg.in/streamtune/data.v1"
 )
 
 // DefaultPageParam is the default page HTTP parameter
